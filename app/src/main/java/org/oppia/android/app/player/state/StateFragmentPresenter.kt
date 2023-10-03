@@ -33,6 +33,7 @@ import org.oppia.android.app.player.audio.AudioUiManager
 import org.oppia.android.app.player.state.ConfettiConfig.LARGE_CONFETTI_BURST
 import org.oppia.android.app.player.state.ConfettiConfig.MEDIUM_CONFETTI_BURST
 import org.oppia.android.app.player.state.ConfettiConfig.MINI_CONFETTI_BURST
+import org.oppia.android.app.player.state.itemviewmodel.StateItemViewModel
 import org.oppia.android.app.player.state.listener.RouteToHintsAndSolutionListener
 import org.oppia.android.app.player.stopplaying.StopStatePlayingSessionWithSavedProgressListener
 import org.oppia.android.app.survey.SurveyWelcomeDialogFragment
@@ -298,6 +299,14 @@ class StateFragmentPresenter @Inject constructor(
     }
   }
 
+  private fun areListsTheSame(l: List<StateItemViewModel>, r: List<StateItemViewModel>): Boolean {
+    if (l.size != r.size) {
+      return false
+    }
+
+    return l.zip(r).all { (x, y) -> x.areContentsTheSame(y) }
+  }
+
   private fun processEphemeralState(ephemeralState: EphemeralState) {
     explorationCheckpointState = ephemeralState.checkpointState
     val shouldSplit = splitScreenManager.shouldSplitScreen(ephemeralState.state.interaction.id)
@@ -323,10 +332,14 @@ class StateFragmentPresenter @Inject constructor(
       shouldSplit
     )
 
-    viewModel.itemList.clear()
-    viewModel.itemList += dataPair.first
-    viewModel.rightItemList.clear()
-    viewModel.rightItemList += dataPair.second
+    if (!areListsTheSame(viewModel.itemList, dataPair.first)) {
+      viewModel.itemList.clear()
+      viewModel.itemList += dataPair.first
+    }
+    if (!areListsTheSame(viewModel.rightItemList, dataPair.second)) {
+      viewModel.rightItemList.clear()
+      viewModel.rightItemList += dataPair.second
+    }
 
     if (isInNewState) {
       (binding.stateRecyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(
